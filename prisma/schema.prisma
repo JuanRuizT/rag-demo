@@ -8,21 +8,60 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  posts     Post[]
+  id            String        @id @default(cuid())
+  name          String?
+  email         String        @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  accounts      Account[]
+  ragDocuments  RagDocument[]
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
+model RagDocument {
+  id           String     @id @default(cuid())
+  name         String
+  originalName String
+  gcsPath      String
+  mimeType     String
+  status       String     @default("processing")
+  pageCount    Int?
+  errorMessage String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chunks       RagChunk[]
 }
+
+model RagChunk {
+  id         String      @id @default(cuid())
+  documentId String
+  document   RagDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content    String
+  pageNumber Int?
+  chunkIndex Int
+  createdAt  DateTime    @default(now())
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
